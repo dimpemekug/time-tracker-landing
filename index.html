@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracker – Gestione del tempo</title>
+    <meta name="description" content="Traccia le ore per progetti e attività. Tema chiaro/scuro, backup locale.">
+    <link rel="icon" type="image/png" href="icon.png">
+    <!-- 1. Carichiamo Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Configuriamo Tailwind (IMPORTANTE: darkMode 'class' per far funzionare il toggle) -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        accent: '#4379FF', 
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scroll': 'scroll 40s linear infinite',
+                    },
+                    keyframes: {
+                        scroll: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-100%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Transizioni fluide per tutto */
+        body, .phone-ui-element, .bento-box, img, details, summary, svg, p, h1, h2, h3, div, button {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, fill 0.3s ease, stroke 0.3s ease;
+        }
+        
+        /* 3D Phone Effect */
+        .perspective-container { perspective: 2000px; }
+        .phone-3d {
+            transform: rotateX(20deg) rotateZ(-10deg) rotateY(10deg) scale(0.9);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        .phone-3d:hover {
+            transform: rotateX(10deg) rotateZ(-5deg) rotateY(5deg) scale(0.95);
+            box-shadow: 0 40px 80px -20px rgba(67, 121, 255, 0.3);
+        }
+
+        /* Background Grid */
+        .bg-grid {
+            background-size: 50px 50px;
+            mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+        }
+        html:not(.dark) .bg-grid {
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        }
+        html.dark .bg-grid {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Fade Mask per lo slider */
+        .fade-mask {
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+    </style>
+</head>
+<body class="antialiased bg-gray-50 text-neutral-900 dark:bg-black dark:text-white transition-colors duration-300 overflow-x-hidden">
+
+    <!-- Sfondo Griglia -->
+    <div class="fixed inset-0 bg-grid z-[-1] pointer-events-none h-[100vh]"></div>
+
+    <!-- PULSANTE CAMBIO TEMA (Fixed Top Right) -->
+    <button id="theme-toggle" class="fixed top-6 right-6 z-50 p-3 rounded-full bg-white border border-gray-200 dark:bg-[#1A1A1A] dark:border-white/10 shadow-lg hover:scale-110 transition-transform group" aria-label="Cambia tema">
+        <!-- Icona Sole (Visibile SOLO in Dark Mode) -->
+        <svg class="w-6 h-6 hidden dark:block text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <!-- Icona Luna (Visibile SOLO in Light Mode) -->
+        <svg class="w-6 h-6 block dark:hidden text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    </button>
+
+    <main class="max-w-2xl mx-auto px-6 pt-16 pb-24 flex flex-col items-center relative">
+
+        <!-- ICONA APP -->
+        <div class="mb-10 relative group">
+            <div class="absolute -inset-1 bg-gradient-to-br from-[#4379FF] to-[#8A6CFF] rounded-[2.2rem] blur-xl opacity-40 group-hover:opacity-60 transition duration-500"></div>
+            <div class="relative w-28 h-28 rounded-[2rem] bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-[#262626] p-1 shadow-2xl overflow-hidden">
+                <div class="w-full h-full rounded-[1.8rem] bg-white flex items-center justify-center overflow-hidden">
+                   <!-- Placeholder Icona se non hai icon.png -->
+                   <img src="icon.png" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'text-4xl\'>⏱️</div>'" alt="Time Tracker Icon" class="w-full h-full object-contain hover:scale-105 transition-transform duration-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- HERO TEXT -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-4 text-neutral-900 dark:text-white">
+                Time Tracker
+            </h1>
+            <p class="text-xl font-medium text-gray-500 dark:text-gray-400 mb-6">
+                Cronometra progetti e attività.
+            </p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-[#4379FF]/20 dark:text-blue-300 text-xs font-bold">iOS & Android</span>
+                <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-xs font-bold">Backup Locale</span>
+            </div>
+        </div>
+
+        <!-- DOWNLOAD BUTTONS -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 mb-20 w-full justify-center">
+            <a href="#" class="flex items-center gap-3 bg-black text-white dark:bg-white dark:text-black px-8 py-3.5 rounded-2xl font-bold hover:opacity-80 transition active:scale-95 shadow-xl shadow-black/10 dark:shadow-white/5">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.84 1.53-2.95 1.5a3.6 3.6 0 0 1 1.05-3.19z"/></svg>
+                <span>App Store</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 bg-white text-black border border-gray-200 dark:bg-[#1A1A1A] dark:border-[#262626] dark:text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-gray-100 dark:hover:bg-white/10 transition active:scale-95 shadow-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.36,10.72L17.5,9.11L15.39,11.23L17.5,13.34L20.36,11.73C20.79,11.49 20.79,10.96 20.36,10.72M16.81,8.88L14.54,11.15L6.05,2.66L16.81,8.88Z"/></svg>
+                <span>Google Play</span>
+            </a>
+        </div>
+
+        <!-- 3D PHONE MOCKUP -->
+        <div class="perspective-container w-full flex justify-center mb-16 relative">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#4379FF]/20 blur-[100px] rounded-full pointer-events-none"></div>
+            <div class="phone-3d relative z-10">
+                <div class="w-[320px] h-[650px] bg-gray-900 border-[8px] border-gray-800 dark:bg-black dark:border-[#111] rounded-[3.5rem] overflow-hidden shadow-2xl relative flex flex-col box-content">
+                    <div class="absolute top-3 left-1/2 -translate-x-1/2 h-[26px] w-[90px] bg-black rounded-full z-50"></div>
+                    <div class="flex-1 bg-[#F2F2F7] dark:bg-[#000000] flex flex-col font-sans relative overflow-hidden phone-ui-element">
+                        <div class="h-12 w-full flex justify-between items-end px-6 pb-1 text-[10px] font-bold text-black dark:text-white">
+                            <span>10:34</span>
+                            <div class="flex gap-1"><svg class="w-4 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.41 3.59-8 8-8 .9 0 1.77.15 2.59.41l-8.18 8.18C4.84 13.25 4 12.67 4 12zm8 8c-.9 0-1.77-.15-2.59-.41l8.18-8.18c1.57.64 2.41 2.23 2.41 4.59 0 4.41-3.59 8-8 8z"/></svg><svg class="w-5 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17 6H7c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg></div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto no-scrollbar px-5 pt-2 pb-20">
+                            <div class="flex justify-between items-center mb-5">
+                                <h2 class="text-[34px] font-bold text-black dark:text-white tracking-tight">Attività</h2>
+                                <button class="text-[#4379FF] text-3xl font-light p-1 hover:opacity-70">+</button>
+                            </div>
+                            <div class="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-5 mb-8 shadow-sm phone-ui-element">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-gray-400 dark:text-gray-500 text-[15px]">Totale</span>
+                                    <div class="flex items-center gap-1 text-gray-400 text-xs"><span>Progetti principali</span><svg class="w-3 h-3 rotate-45 text-[#4379FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg></div>
+                                </div>
+                                <div class="flex justify-between items-end">
+                                    <div class="text-[38px] font-bold text-black dark:text-white leading-none tracking-tight mt-1">34h 05m</div>
+                                    <div class="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400 text-right">
+                                        <div class="flex items-center justify-end gap-2"><span class="w-2 h-2 rounded-full bg-[#FF3B30]"></span> 5h 15m</div>
+                                        <div class="flex items-center justify-end gap-2"><span class="w-2 h-2 rounded-full bg-[#A2845E]"></span> 4h 35m</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-2 px-1"><span class="text-[17px] font-semibold text-gray-400 dark:text-gray-500">Ieri</span><span class="text-[15px] text-gray-400 dark:text-gray-600">2h 40m</span></div>
+                                <div class="bg-white dark:bg-[#1C1C1E] rounded-[20px] overflow-hidden shadow-sm phone-ui-element">
+                                    <div class="flex items-center py-3.5 px-4 border-b border-gray-100 dark:border-white/5">
+                                        <div class="flex flex-col w-12 text-xs text-gray-400 dark:text-gray-500 space-y-0.5"><span>04:23</span><span>05:53</span></div>
+                                        <div class="flex-1 px-3"><p class="text-[15px] font-bold text-black dark:text-white leading-snug">Stakeholder Workshop</p><div class="flex items-center gap-1.5 mt-0.5"><span class="w-2 h-2 rounded-full bg-[#4379FF]"></span><span class="text-[13px] text-[#4379FF]">Apex Redesign</span></div></div>
+                                        <div class="text-[15px] text-black dark:text-white font-medium">1h 30m</div>
+                                    </div>
+                                    <div class="flex items-center py-3.5 px-4">
+                                        <div class="flex flex-col w-12 text-xs text-gray-400 dark:text-gray-500 space-y-0.5"><span>09:23</span><span>10:33</span></div>
+                                        <div class="flex-1 px-3"><p class="text-[15px] font-bold text-black dark:text-white leading-snug">Client Kick-off Call</p><div class="flex items-center gap-1.5 mt-0.5"><span class="w-2 h-2 rounded-full bg-[#34C759]"></span><span class="text-[13px] text-[#34C759]">Zenith Mobile App</span></div></div>
+                                        <div class="text-[15px] text-black dark:text-white font-medium">1h 10m</div>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="mb-6">
+                                <div class="flex justify-between items-center mb-2 px-1"><span class="text-[17px] font-semibold text-gray-400 dark:text-gray-500">19 novembre</span><span class="text-[15px] text-gray-400 dark:text-gray-600">12h 35m</span></div>
+                                <div class="bg-white dark:bg-[#1C1C1E] rounded-[20px] overflow-hidden shadow-sm phone-ui-element">
+                                    <div class="flex items-center py-3.5 px-4">
+                                        <div class="flex flex-col w-12 text-xs text-gray-400 dark:text-gray-500 space-y-0.5"><span>03:23</span><span>05:53</span></div>
+                                        <div class="flex-1 px-3"><p class="text-[15px] font-bold text-black dark:text-white leading-snug">Moodboard Exploration</p><div class="flex items-center gap-1.5 mt-0.5"><span class="w-2 h-2 rounded-full bg-[#FF3B30]"></span><span class="text-[13px] text-[#FF3B30]">Helios Brand Refresh</span></div></div>
+                                        <div class="text-[15px] text-black dark:text-white font-medium">2h 30m</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 w-full bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/5 pb-6 pt-2 px-2 flex justify-between items-center phone-ui-element">
+                            <div class="flex flex-col items-center w-1/4 cursor-pointer"><svg class="w-7 h-7 text-[#4379FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span class="text-[10px] font-medium text-[#4379FF] mt-1">Riepilogo</span></div>
+                            <div class="flex flex-col items-center w-1/4 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"><svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg><span class="text-[10px] font-medium mt-1">Dashboard</span></div>
+                            <div class="flex flex-col items-center w-1/4 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"><svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg><span class="text-[10px] font-medium mt-1">Progetti</span></div>
+                            <div class="flex flex-col items-center w-1/4 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"><svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg><span class="text-[10px] font-medium mt-1">Impostazioni</span></div>
+                        </div>
+                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-black/20 dark:bg-white/20 rounded-full z-50"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOCIAL PROOF -->
+        <div class="flex flex-col items-center gap-4 mb-20">
+            <div class="flex -space-x-3">
+                <div class="w-10 h-10 rounded-full border-2 border-white dark:border-black bg-gray-300 overflow-hidden"><img src="https://i.pravatar.cc/100?img=8" alt=""></div>
+                <div class="w-10 h-10 rounded-full border-2 border-white dark:border-black bg-gray-300 overflow-hidden"><img src="https://i.pravatar.cc/100?img=3" alt=""></div>
+                <div class="w-10 h-10 rounded-full border-2 border-white dark:border-black bg-gray-300 overflow-hidden"><img src="https://i.pravatar.cc/100?img=4" alt=""></div>
+                <div class="w-10 h-10 rounded-full border-2 border-white dark:border-black bg-gray-300 overflow-hidden"><img src="https://i.pravatar.cc/100?img=5" alt=""></div>
+                <div class="w-10 h-10 rounded-full border-2 border-white dark:border-black bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-300">+5k</div>
+            </div>
+            <div class="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+                <span class="text-yellow-400">★★★★★</span>
+                <span>Amato da freelance e studenti</span>
+            </div>
+        </div>
+
+        <!-- BENTO GRID -->
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-24">
+            <div class="bento-box bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-[#262626] p-6 rounded-3xl flex flex-col justify-between h-60 group hover:border-blue-400/30 shadow-sm hover:shadow-md">
+                <div class="w-10 h-10 bg-gray-100 dark:bg-[#1A1A1A] rounded-xl flex items-center justify-center text-xl mb-4">🔒</div>
+                <div>
+                    <h3 class="text-lg font-bold mb-1 text-neutral-900 dark:text-white">Export & Backup</h3>
+                    <p class="text-sm text-gray-500">Con il salvataggio e il ripristino locale dei backup, hai il controllo totale e la piena autonomia. Gestisci le tue informazioni in sicurezza, senza dipendere da server esterni.</p>
+                </div>
+            </div>
+            <div class="bento-box bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-[#262626] p-6 rounded-3xl flex flex-col justify-between h-60 group hover:border-blue-400/30 shadow-sm hover:shadow-md">
+                <div class="w-10 h-10 bg-gray-100 dark:bg-[#1A1A1A] rounded-xl flex items-center justify-center text-xl mb-4">🎨</div>
+                <div>
+                    <h3 class="text-lg font-bold mb-1 text-neutral-900 dark:text-white">Personalizzazione</h3>
+                    <p class="text-sm text-gray-500">Temi Chiaro e Scuro, colore d'accento e lingua personalizzabili.<br>Disponibile in: Italiano, Inglese, Francese, Tedesco, Portoghese, Spagnolo e Russo.</p>
+                </div>
+            </div>
+            <div class="bento-box md:col-span-2 bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-[#262626] p-8 rounded-3xl group hover:border-blue-400/30 shadow-sm hover:shadow-md flex flex-col md:flex-row items-center gap-8 overflow-hidden">
+                <div class="flex-1">
+                    <h3 class="text-2xl font-bold mb-2 text-neutral-900 dark:text-white">Per Freelance e Team</h3>
+                    <p class="text-gray-500 mb-4">Tieni traccia di più progetti contemporaneamente e accedi allo storico completo delle tue sessioni senza limiti.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-semibold bg-gray-100 dark:bg-[#1A1A1A] px-3 py-1 rounded-lg text-gray-600 dark:text-gray-400">Report PDF</span>
+                        <span class="text-xs font-semibold bg-gray-100 dark:bg-[#1A1A1A] px-3 py-1 rounded-lg text-gray-600 dark:text-gray-400">No Abbonamenti</span>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/3 h-32 bg-gradient-to-br from-gray-50 to-gray-200 dark:from-[#151515] dark:to-black rounded-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center relative">
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-[#222] shadow-lg rounded-full px-4 py-2 flex items-center gap-2 whitespace-nowrap">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-xs font-bold text-neutral-800 dark:text-white">Tracking attivo...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS SLIDER (LARGHEZZA CONTENUTA) -->
+        <div class="w-full relative overflow-hidden py-8 bg-gray-50 dark:bg-[#050505] border border-gray-200 dark:border-[#1A1A1A] rounded-3xl mb-24">
+            <!-- Fade Mask -->
+            <div class="fade-mask absolute inset-0 z-10 pointer-events-none"></div>
+            
+            <!-- Slider Content -->
+            <div class="flex gap-6 w-max animate-scroll hover:pause px-4">
+                <!-- Cards -->
+                <div class="w-80 bg-white dark:bg-[#0F0F0F] p-5 rounded-xl border border-gray-200 dark:border-[#262626] shadow-sm">
+                    <div class="text-yellow-400 text-xs mb-2">★★★★★</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">"Finalmente un'app pulita che fa esattamente quello che dice. Indispensabile per i miei progetti."</p>
+                    <div class="text-xs font-bold text-gray-400">@marco_dev</div>
+                </div>
+                <div class="w-80 bg-white dark:bg-[#0F0F0F] p-5 rounded-xl border border-gray-200 dark:border-[#262626] shadow-sm">
+                    <div class="text-yellow-400 text-xs mb-2">★★★★★</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">"La modalità scura è bellissima. Uso i backup per stare tranquillo."</p>
+                    <div class="text-xs font-bold text-gray-400">@sara_design</div>
+                </div>
+                <div class="w-80 bg-white dark:bg-[#0F0F0F] p-5 rounded-xl border border-gray-200 dark:border-[#262626] shadow-sm">
+                    <div class="text-yellow-400 text-xs mb-2">★★★★★</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">"Ottima per gestire lo studio universitario e calcolare le ore effettive."</p>
+                    <div class="text-xs font-bold text-gray-400">@luca_uni</div>
+                </div>
+                 <div class="w-80 bg-white dark:bg-[#0F0F0F] p-5 rounded-xl border border-gray-200 dark:border-[#262626] shadow-sm">
+                    <div class="text-yellow-400 text-xs mb-2">★★★★★</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">"Semplice, veloce e senza pubblicità invasive. Consigliatissima."</p>
+                    <div class="text-xs font-bold text-gray-400">@giulia_freelance</div>
+                </div>
+                <!-- Duplicate -->
+                <div class="w-80 bg-white dark:bg-[#0F0F0F] p-5 rounded-xl border border-gray-200 dark:border-[#262626] shadow-sm">
+                    <div class="text-yellow-400 text-xs mb-2">★★★★★</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">"Finalmente un'app pulita che fa esattamente quello che dice. Indispensabile per i miei progetti."</p>
+                    <div class="text-xs font-bold text-gray-400">@marco_dev</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA FINALE -->
+        <div class="text-center w-full mb-20">
+            <p class="text-2xl md:text-3xl font-bold mb-4 text-neutral-900 dark:text-white">Ritrova tempo prezioso.</p>
+            <p class="text-gray-500 mb-8">Inizia a registrare le tue ore in pochi secondi.</p>
+            <div class="flex flex-wrap justify-center gap-3 text-xs text-gray-400 dark:text-gray-600 font-medium uppercase tracking-widest opacity-80">
+                <span>Time Tracking</span> • 
+                <span>Produttività</span> • 
+                <span>Timer Lavoro</span> • 
+                <span>Freelance</span>
+            </div>
+        </div>
+
+        <!-- ACCORDION SECTIONS (Privacy & Contatti) -->
+        <div class="w-full max-w-2xl mx-auto mb-24 space-y-4">
+            
+            <!-- 1. PRIVACY POLICY -->
+            <details class="group bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-[#262626] rounded-2xl overflow-hidden transition-all duration-300 open:shadow-lg open:ring-1 open:ring-black/5 dark:open:ring-white/10">
+                <summary class="flex justify-between items-center p-5 cursor-pointer list-none select-none text-sm font-semibold text-neutral-900 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <span>Informativa sulla Privacy – Time Tracker</span>
+                    <svg class="w-5 h-5 text-gray-400 transition-transform duration-300 group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </summary>
+                
+                <div class="p-6 pt-2 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-white/5 space-y-6 leading-relaxed">
+                    <p class="text-xs text-gray-400">Ultimo aggiornamento: <span class="text-neutral-900 dark:text-white">21 Novembre 2025</span></p>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">1. Chi siamo</h4>
+                        <p>Time Tracker è un’app per tracciare tempo e progetti. Per domande privacy: <a href="mailto:dimpemekug.app@gmail.com" class="text-[#4379FF] hover:underline">dimpemekug.app@gmail.com</a>.</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">2. Dati personali trattati</h4>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>Dati inseriti dall’utente: progetti, attività, intervalli di tempo, preferenze (tema, lingua, colore, scala font).</li>
+                            <li>Non raccogliamo dati sensibili (es. salute, pagamenti, posizione, contatti, foto, microfono, rubrica), né chiediamo login o account.</li>
+                            <li>Backup locali: file JSON creati dall’utente esportando i dati.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">3. Pubblicità e tracciamento</h4>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>Nessuna pubblicità in-app.</li>
+                            <li>Nessun tracking o analytics: non inviamo dati a server o servizi terzi per profilazione o statistiche.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">4. Finalità del trattamento</h4>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>Fornire le funzionalità dell’app (registrare e visualizzare tempo e progetti).</li>
+                            <li>Salvare le impostazioni scelte (tema, lingua, scala font).</li>
+                            <li>Consentire il backup/ripristino tramite file JSON.</li>
+                        </ul>
+                        <p class="mt-1 italic text-xs">Base giuridica: esecuzione del servizio richiesto dall’utente.</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">5. Modalità e conservazione</h4>
+                        <p>I dati restano sul dispositivo. Nessun invio automatico ai nostri server. I backup vengono salvati dove l’utente sceglie (memoria locale o percorso di salvataggio del dispositivo).</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">6. Condivisione con terzi</h4>
+                        <p>Non vendiamo né condividiamo dati con terzi. La condivisione avviene solo se l’utente esporta o condivide manualmente un backup (es. tramite app di file o condivisione del sistema).</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">7. Servizi e librerie di terze parti</h4>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>File picker/condivisione: l’app usa servizi di sistema e librerie per salvare/condividere i backup; trattano i file solo per l’azione richiesta dall’utente.</li>
+                            <li>Archiviazione: i dati sono salvati nella memoria del dispositivo secondo le regole del sistema operativo.</li>
+                            <li>Nessun servizio pubblicitario o di analytics integrato.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">8. Sicurezza</h4>
+                        <p>I dati restano locali; l’app si affida ai meccanismi di sicurezza del dispositivo (blocco, cifratura se attiva). I backup JSON non sono cifrati: conservali solo in luoghi sicuri.</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">9. Diritti dell’utente</h4>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>Accedere, modificare o eliminare i dati direttamente in app.</li>
+                            <li>Esportare/importare i dati tramite backup.</li>
+                            <li>Cancellare tutto con le funzioni di reset/clear database.</li>
+                        </ul>
+                        <p class="mt-1">Per esercitare i diritti privacy o chiedere assistenza: <a href="mailto:dimpemekug.app@gmail.com" class="text-neutral-900 dark:text-white font-medium">dimpemekug.app@gmail.com</a>.</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">10. Trasferimenti extra-UE</h4>
+                        <p>Nessun trasferimento, salvo scelta esplicita dell’utente di salvare/condividere i dati con servizi cloud.</p>
+                    </section>
+
+                    <section>
+                        <h4 class="font-bold text-neutral-900 dark:text-white mb-1">11. Aggiornamenti</h4>
+                        <p>Eventuali modifiche saranno pubblicate in questa informativa; l’uso continuato dell’app implica l’accettazione delle nuove versioni.</p>
+                    </section>
+                </div>
+            </details>
+
+            <!-- 2. SUPPORTO E CONTATTI -->
+            <details class="group bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-[#262626] rounded-2xl overflow-hidden transition-all duration-300 open:shadow-lg open:ring-1 open:ring-black/5 dark:open:ring-white/10">
+                <summary class="flex justify-between items-center p-5 cursor-pointer list-none select-none text-sm font-semibold text-neutral-900 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <span>Supporto e contatti</span>
+                    <svg class="w-5 h-5 text-gray-400 transition-transform duration-300 group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </summary>
+                
+                <div class="p-6 pt-2 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-white/5 leading-relaxed">
+                    <p class="mb-4">
+                        Per domande, assistenza o feedback su Time Tracker scrivici a 
+                        <a href="mailto:dimpemekug.app@gmail.com" class="text-[#4379FF] hover:underline font-medium">dimpemekug.app@gmail.com</a>. 
+                        Ti rispondiamo il prima possibile.
+                    </p>
+                    
+                    <div class="bg-gray-50 dark:bg-[#151515] p-4 rounded-xl border border-gray-100 dark:border-white/5">
+                        <p class="text-xs font-bold text-neutral-900 dark:text-white mb-1">💡 Tip per segnalare bug:</p>
+                        <p class="text-xs">
+                            Se segnali problemi, indica <strong>modello dispositivo</strong>, <strong>versione sistema operativo</strong> e <strong>passaggi per riprodurre l’errore</strong>: ci aiuterai a risolvere più velocemente.
+                        </p>
+                    </div>
+                </div>
+            </details>
+
+        </div>
+
+        <footer class="mt-16 text-gray-400 text-xs text-center pb-8 border-t border-gray-200 dark:border-white/5 pt-8 w-full">
+            <p>© 2025 Time Tracker App.</p>
+        </footer>
+
+    </main>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script>
+        const toggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        // Funzione per inizializzare il tema
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                htmlElement.classList.toggle('dark', savedTheme === 'dark');
+            } else {
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                htmlElement.classList.toggle('dark', systemDark);
+            }
+        }
+
+        // Event listener per il pulsante
+        toggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Avvio
+        initTheme();
+    </script>
+</body>
+</html>
