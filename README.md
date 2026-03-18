@@ -19,7 +19,7 @@ Puoi vedere il sito online qui:
 *   **📱 3D Phone Mockup:** Un'animazione CSS avanzata che mostra l'interfaccia dell'app in 3D che ruota al passaggio del mouse. L'interfaccia dentro il telefono cambia colore in base al tema!
 *   **⚡️ Performance:** Costruito con puro HTML e Tailwind CSS (via CDN). Nessun framework pesante, caricamento istantaneo.
 *   **📱 Responsivo:** Ottimizzato perfettamente per Desktop, Tablet e Mobile.
-*   **📄 Sezioni Collassabili:** Privacy Policy e Supporto integrate in eleganti menu a fisarmonica.
+*   **📄 Sezioni Legali Collassabili:** Privacy Policy e Supporto sono integrate a fondo pagina, con possibilità di aprire l'informativa completa in formato Markdown.
 
 ## 🛠️ Tecnologie Utilizzate
 
@@ -32,6 +32,13 @@ Puoi vedere il sito online qui:
 
 ```text
 /
-├── index.html      # Il codice principale della landing page
-├── icon.png        # L'icona dell'app (mostrata nell'hero e come favicon)
-└── README.md       # Questo file di documentazione
+├── index.html              # Il codice principale della landing page
+├── icon.png                # L'icona dell'app (mostrata nell'hero e come favicon)
+├── PRIVACY_POLICY_IT.md    # Informativa privacy completa caricata nella modale
+└── README.md               # Questo file di documentazione
+```
+
+## 🔒 Privacy Policy
+
+Puoi leggere la versione completa dell'informativa qui:
+👉 **[PRIVACY_POLICY_IT.md](./PRIVACY_POLICY_IT.md)**

@@ -80,6 +80,105 @@
             mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
             -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
         }
+
+        /* Modal Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
+
+        /* Markdown content inside privacy modal */
+        .markdown-content {
+            color: #374151;
+        }
+        .markdown-content > * + * {
+            margin-top: 1rem;
+        }
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            color: #111827;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+        .markdown-content h1 {
+            font-size: 1.8rem;
+            margin-top: 0;
+        }
+        .markdown-content h2 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+        }
+        .markdown-content h3 {
+            font-size: 1.05rem;
+            margin-top: 1.5rem;
+        }
+        .markdown-content p,
+        .markdown-content li {
+            line-height: 1.75;
+        }
+        .markdown-content ul,
+        .markdown-content ol {
+            padding-left: 1.4rem;
+        }
+        .markdown-content ul {
+            list-style: disc;
+        }
+        .markdown-content ol {
+            list-style: decimal;
+        }
+        .markdown-content li + li {
+            margin-top: 0.4rem;
+        }
+        .markdown-content strong {
+            color: #111827;
+            font-weight: 700;
+        }
+        .markdown-content code {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.875rem;
+            background: rgba(15, 23, 42, 0.06);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 0.5rem;
+            padding: 0.1rem 0.4rem;
+            word-break: break-word;
+        }
+        .markdown-content a {
+            color: #4379FF;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .markdown-content blockquote {
+            border-left: 3px solid rgba(67, 121, 255, 0.25);
+            padding-left: 1rem;
+            color: #4B5563;
+        }
+        .markdown-content hr {
+            border: 0;
+            border-top: 1px solid rgba(15, 23, 42, 0.08);
+            margin: 1.5rem 0;
+        }
+        html.dark .markdown-content {
+            color: #D1D5DB;
+        }
+        html.dark .markdown-content h1,
+        html.dark .markdown-content h2,
+        html.dark .markdown-content h3,
+        html.dark .markdown-content strong {
+            color: #FFFFFF;
+        }
+        html.dark .markdown-content code {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        html.dark .markdown-content blockquote {
+            color: #9CA3AF;
+            border-left-color: rgba(96, 165, 250, 0.35);
+        }
+        html.dark .markdown-content hr {
+            border-top-color: rgba(255, 255, 255, 0.08);
+        }
     </style>
 </head>
 <body class="antialiased bg-gray-50 text-neutral-900 dark:bg-black dark:text-white transition-colors duration-300 overflow-x-hidden">
@@ -389,6 +488,15 @@
                         <h4 class="font-bold text-neutral-900 dark:text-white mb-1">11. Aggiornamenti</h4>
                         <p>Eventuali modifiche saranno pubblicate in questa informativa; l’uso continuato dell’app implica l’accettazione delle nuove versioni.</p>
                     </section>
+
+                    <div class="pt-4 border-t border-gray-100 dark:border-white/5 mt-4">
+                        <button id="open-privacy-modal" class="text-[#4379FF] dark:text-blue-400 font-bold hover:underline flex items-center gap-2 text-xs uppercase tracking-widest">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+                            </svg>
+                            Leggi informativa completa (.md)
+                        </button>
+                    </div>
                 </div>
             </details>
 
@@ -425,6 +533,35 @@
 
     </main>
 
+    <!-- MODALE PRIVACY POLICY -->
+    <div id="privacy-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6 overflow-hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" id="modal-backdrop"></div>
+
+        <div class="relative bg-white dark:bg-[#0F0F0F] w-full max-w-3xl max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col border border-gray-200 dark:border-white/10 scale-95 transition-transform duration-300" id="modal-container">
+            <div class="p-6 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/[0.02] rounded-t-[2rem]">
+                <div>
+                    <h3 class="font-bold text-lg text-neutral-900 dark:text-white uppercase tracking-tight">Privacy Policy Estesa</h3>
+                    <p class="text-[10px] text-gray-500 font-mono">PRIVACY_POLICY_IT.md</p>
+                </div>
+                <button id="close-privacy-modal" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors text-gray-500 dark:text-gray-400" aria-label="Chiudi modale privacy">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto text-sm leading-relaxed custom-scrollbar">
+                <div id="privacy-content" class="markdown-content"></div>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 dark:border-white/5 text-center bg-gray-50/50 dark:bg-white/[0.02] rounded-b-[2rem]">
+                <button id="close-privacy-modal-btn" class="px-8 py-2.5 bg-neutral-900 dark:bg-white dark:text-black text-white rounded-xl font-bold text-sm hover:opacity-80 transition active:scale-95">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
     <!-- LOGICA JAVASCRIPT -->
     <script>
         const toggleBtn = document.getElementById('theme-toggle');
@@ -445,6 +582,78 @@
         toggleBtn.addEventListener('click', () => {
             htmlElement.classList.toggle('dark');
             localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        const openPrivacyBtn = document.getElementById('open-privacy-modal');
+        const closePrivacyBtn = document.getElementById('close-privacy-modal');
+        const closePrivacyBtnFooter = document.getElementById('close-privacy-modal-btn');
+        const privacyModal = document.getElementById('privacy-modal');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalContainer = document.getElementById('modal-container');
+        const privacyContent = document.getElementById('privacy-content');
+        let privacyMarkdownCache = '';
+
+        function renderPrivacyMarkdown(markdown) {
+            if (window.marked && window.DOMPurify) {
+                const renderedHtml = window.marked.parse(markdown, {
+                    gfm: true,
+                    breaks: true,
+                });
+
+                privacyContent.innerHTML = window.DOMPurify.sanitize(renderedHtml);
+                privacyContent.querySelectorAll('a').forEach((link) => {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                });
+                return;
+            }
+
+            privacyContent.textContent = markdown;
+        }
+
+        async function togglePrivacyModal(show) {
+            if (show) {
+                try {
+                    if (!privacyMarkdownCache) {
+                        const response = await fetch('PRIVACY_POLICY_IT.md');
+                        if (!response.ok) throw new Error('File non trovato');
+                        privacyMarkdownCache = await response.text();
+                    }
+
+                    renderPrivacyMarkdown(privacyMarkdownCache);
+                    privacyModal.classList.remove('hidden');
+                    privacyModal.classList.add('flex');
+                    document.body.style.overflow = 'hidden';
+
+                    setTimeout(() => {
+                        modalContainer.classList.remove('scale-95');
+                        modalContainer.classList.add('scale-100');
+                    }, 10);
+                } catch (error) {
+                    console.error('Errore:', error);
+                    alert('Impossibile caricare l\'informativa completa. Assicurati che il file PRIVACY_POLICY_IT.md sia nella stessa cartella.');
+                }
+            } else {
+                modalContainer.classList.remove('scale-100');
+                modalContainer.classList.add('scale-95');
+
+                setTimeout(() => {
+                    privacyModal.classList.add('hidden');
+                    privacyModal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }, 200);
+            }
+        }
+
+        openPrivacyBtn.addEventListener('click', () => togglePrivacyModal(true));
+        closePrivacyBtn.addEventListener('click', () => togglePrivacyModal(false));
+        closePrivacyBtnFooter.addEventListener('click', () => togglePrivacyModal(false));
+        modalBackdrop.addEventListener('click', () => togglePrivacyModal(false));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !privacyModal.classList.contains('hidden')) {
+                togglePrivacyModal(false);
+            }
         });
 
         // Avvio
